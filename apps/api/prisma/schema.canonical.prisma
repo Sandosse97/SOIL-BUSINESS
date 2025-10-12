@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuctionStatus {
+  DRAFT
+  LIVE
+  ENDED
+  CANCELED
+}
+
+enum TxnType {
+  CREDIT
+  DEBIT
+  HOLD
+  RELEASE
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+
+  auctions  Auction[] @relation("SellerAuctions")
+  bids      Bid[]
+  wallet    Wallet?
+  transactions Transaction[]
+}
+
+model Auction {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  status      AuctionStatus @default(DRAFT)
+  sellerId    String
+  seller      User          @relation("SellerAuctions", fields: [sellerId], references: [id])
+  bids        Bid[]
+  images       Json?
+  currency     String        @default("EUR")
+  startingPrice Float?
+  currentPrice  Float        @default(0)
+  minIncrement  Float        @default(1)
+  reservePrice  Float?
+  buyNowPrice   Float?
+  startsAt      DateTime      @default(now())
+  endsAt        DateTime?
+  softCloseSec  Int           @default(30)
+  extendedUntil DateTime?
+  winnerId      String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Bid {
+  id        String   @id @default(cuid())
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id])
+  bidderId  String
+  bidder    User     @relation(fields: [bidderId], references: [id])
+  amount    Float
+  createdAt DateTime @default(now())
+}
+
+model Wallet {
+  id        String        @id @default(cuid())
+  userId    String        @unique
+  user      User          @relation(fields: [userId], references: [id])
+  balance   Float         @default(0)
+  txns      Transaction[]
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  walletId  String?
+  wallet    Wallet?  @relation(fields: [walletId], references: [id])
+  type      TxnType
+  amount    Float
+  ref       String?
+  note      String?
+  createdAt DateTime @default(now())
+}

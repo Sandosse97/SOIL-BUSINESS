@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuctionStatus { DRAFT LIVE ENDED CANCELED }
+enum KycStatus { NONE PENDING VERIFIED REJECTED }
+enum TxnType { CREDIT DEBIT HOLD RELEASE }
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String?
+  createdAt DateTime  @default(now())
+  profiles  Profile[]
+  bids      Bid[]
+  wallet    Wallet?
+}
+
+model Profile {
+  id     String @id @default(cuid())
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+  bio    String?
+}
+
+model Seller {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  display   String
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id])
+  auctions  Auction[]
+}
+
+model Auction {
+  id           String        @id @default(cuid())
+  sellerId     String
+  seller       Seller        @relation(fields: [sellerId], references: [id])
+  title        String
+  description  String
+  images       Json
+  currency     String        @default("EUR")
+  startingPrice Float
+  currentPrice  Float
+  minIncrement  Float
+  reservePrice  Float?
+  buyNowPrice   Float?
+  status        AuctionStatus @default(DRAFT)
+  startsAt      DateTime      @default(now())
+  endsAt        DateTime
+  softCloseSec  Int           @default(30)
+  extendedUntil DateTime?
+  winnerId      String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  bids          Bid[]
+  @@index([status, endsAt])
+}
+
+model Bid {
+  id        String   @id @default(cuid())
+  auctionId String
+  auction   Auction  @relation(fields: [auctionId], references: [id])
+  bidderId  String
+  bidder    User     @relation(fields: [bidderId], references: [id])
+  amount    Float
+  createdAt DateTime @default(now())
+  @@index([auctionId, createdAt])
+}
+
+model Wallet {
+  userId  String   @id
+  user    User     @relation(fields: [userId], references: [id])
+  balance Float    @default(0)
+  currency String  @default("EUR")
+  kyc     KycStatus @default(NONE)
+  txns    Transaction[]
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      TxnType
+  amount    Float
+  ref       String?
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+model Shipment {
+  id        String   @id @default(cuid())
+  auctionId String   @unique
+  auction   Auction  @relation(fields: [auctionId], references: [id])
+  address   Json
+  status    String   @default("pending")
+}
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id    String @id @default(cuid())
+  email String @unique
+}

@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Keep this fast: run linters/tests you want blocking commits
+pnpm -w -r run lint || exit 1
+pnpm -w -r run format:check || exit 1
