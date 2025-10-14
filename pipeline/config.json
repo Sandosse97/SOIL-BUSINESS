@@ -1,0 +1,67 @@
+{
+  "pipeline": {
+    "name": "SOIL-BUSINESS Railway Migration",
+    "version": "1.0.0",
+    "stages": [
+      "pre-migration",
+      "setup-railway", 
+      "migrate-services",
+      "validate-deployment",
+      "post-migration"
+    ]
+  },
+  "services": {
+    "api": {
+      "name": "soil-business-api",
+      "source": "apps/api",
+      "port": 4000,
+      "healthcheck": "/health",
+      "buildCommand": "pnpm run build",
+      "startCommand": "node dist/index.js"
+    },
+    "web": {
+      "name": "soil-business-web",
+      "source": "apps/web", 
+      "port": 3000,
+      "healthcheck": "/",
+      "buildCommand": "pnpm run build",
+      "startCommand": "pnpm start"
+    },
+    "admin": {
+      "name": "soil-business-admin",
+      "source": "apps/admin",
+      "port": 3001,
+      "healthcheck": "/admin",
+      "buildCommand": "pnpm run build", 
+      "startCommand": "pnpm start"
+    }
+  },
+  "database": {
+    "type": "postgresql",
+    "name": "soil-business-db"
+  },
+  "environments": {
+    "shared": {
+      "NODE_ENV": "production"
+    },
+    "api": {
+      "PORT": "${{RAILWAY_PUBLIC_PORT}}",
+      "DATABASE_URL": "${{Postgres.DATABASE_URL}}"
+    },
+    "web": {
+      "NEXT_PUBLIC_API_URL": "${{api.RAILWAY_PUBLIC_DOMAIN}}/api"
+    },
+    "admin": {
+      "NEXT_PUBLIC_API_URL": "${{api.RAILWAY_PUBLIC_DOMAIN}}/api"
+    }
+  },
+  "validation": {
+    "timeout": 300,
+    "retries": 3,
+    "healthchecks": {
+      "api": "https://soil-business-api.railway.app/health",
+      "web": "https://soil-business-web.railway.app/",
+      "admin": "https://soil-business-admin.railway.app/admin"
+    }
+  }
+}
