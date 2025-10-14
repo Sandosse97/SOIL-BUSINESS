@@ -1,7 +1,7 @@
 import Fastify from 'fastify'
-import cors from 'fastify-cors'
-import helmet from 'fastify-helmet'
-import rateLimit from 'fastify-rate-limit'
+import cors from '@fastify/cors'
+import helmet from '@fastify/helmet'
+import rateLimit from '@fastify/rate-limit'
 import fastifyRawBody from 'fastify-raw-body'
 import dotenv from 'dotenv'
 import fastifySocketIO from 'fastify-socket.io'
@@ -36,10 +36,10 @@ void server.register(import('./routes/deals'))
 
 server.ready().then(() => {
   const io = server.io
-  io?.on('connection', (socket) => {
+  io?.on('connection', (socket: any) => {
     server.log.info('socket connected: ' + socket.id)
-    socket.on('join', (room) => socket.join(room))
-    socket.on('message', (msg) => socket.to(msg.room).emit('message', msg))
+    socket.on('join', (room: string) => socket.join(room))
+    socket.on('message', (msg: any) => socket.to(msg.room).emit('message', msg))
   })
 })
 

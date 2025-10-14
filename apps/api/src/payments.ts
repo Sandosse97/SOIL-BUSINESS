@@ -11,7 +11,10 @@ const ENV = {
 }
 
 export async function paymentsPlugin(app: FastifyInstance) {
-  const auth = (app as any).authenticate
+  // Dev auth placeholder (same as in deals.ts)
+  const auth = async (request: any, reply: any) => {
+    request.user = { id: 'dev-user-1', email: 'dev@example.com', role: 'ADMIN' }
+  }
 
   // Create a Checkout Session for wallet topup
   app.post('/payments/checkout', { preHandler: [auth] }, async (req: any, reply) => {
